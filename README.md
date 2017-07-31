@@ -13,7 +13,7 @@
 * mysql2
 * sequelize
 * uuid
---
+---
 ### Returned JSON
 Returns a JSON object with 5 pieces of information back to browser upon sucessfull actions
 
