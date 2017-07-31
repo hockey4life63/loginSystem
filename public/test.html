@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test page</title>
+</head>
+<body>
+  <h2>Add a Burger</h2>
+<form>
+
+  <div class="form-group">
+    <label for="ca">Burger Name:</label>
+    <input type="text" id="name" name="name">
+  </div>
+
+  <div class="form-group">
+    <label for="ca">password:</label>
+    <input type="text" id="password" name="password">
+  </div>
+
+  <button type="btn" id="subBtn">Add Burger></button>
+  </form>
+  <h1>Login</h1>
+  <form>
+  <div class="form-group">
+    <label for="ca">Burger Name:</label>
+    <input type="text" id="nameLogin" name="name">
+  </div>
+
+  <div class="form-group">
+    <label for="ca">password:</label>
+    <input type="text" id="passwordLogin" name="password">
+  </div>
+
+  <button type="btn" id="subBtnLogin">Add Burger></button>
+  </form>
+</body>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+  <script type="text/javascript">
+
+    $("#subBtn").on("click", function(e){
+      e.preventDefault();
+      let user_info = {};
+      user_info.name=$("#name").val();
+      user_info.password = $("#password").val();
+      $.post("/login/create",user_info, (data)=>{
+        console.log(data);
+        $.post("/login/check",data, (results)=>{
+          console.log(results);
+        });
+      });
+    });
+
+    $("#subBtnLogin").on("click", function(e){
+      e.preventDefault();
+      let user_info = {};
+      user_info.name=$("#nameLogin").val();
+      user_info.password = $("#passwordLogin").val();
+      $.post("/login",user_info, (data)=>{
+        console.log(data)
+        $.post("/login/check",data, (results)=>{
+          console.log(results);
+        });
+      });
+    })
+  </script>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "burger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hockey4life63/burger.git"
+  },
+  "author": "Alex",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hockey4life63/burger/issues"
+  },
+  "homepage": "https://github.com/hockey4life63/burger#readme",
+  "dependencies": {
+    "bcrypt": "^1.0.2",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "express-handlebars": "^3.0.0",
+    "method-override": "^2.3.9",
+    "moment": "^2.18.1",
+    "mysql": "^2.13.0",
+    "mysql2": "^1.3.6",
+    "sequelize": "^4.4.2",
+    "uuid": "^3.1.0"
+  }
+}
