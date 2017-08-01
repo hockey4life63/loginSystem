@@ -1,19 +1,51 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const exphbs = require("express-handlebars");
 const db = require("../models");
 const bcrypt = require('bcrypt');
 const uuidv4 = require('uuid/v4');
 const path = require("path");
 const moment = require('moment');
-const acctManager = require("../password_auth/acctManager")
 
-let router =express.Router();
-router.get("/", (req, res)=>{
-  res.sendFile(path.join(__dirname ,"/../public/test.html"))
-})
+const  acctManager = {}
 
-const _createNewUuid = (userInfo, callback)=>{
+acctManager.createAcct = (userInfo, res)=>{
+  bcrypt.hash(userInfo.password, 10, function(err, hash) {
+    //check for usernmae and create it if doesnt exist
+    db.User.findOrCreate({
+          where:{
+            name:userInfo.name
+          },
+          defaults:{
+            pw_hash:hash,
+            uuid: uuidv4()
+          }
+        }).then(results=>{
+      //if created a new one send response
+      let resObj;
+      if(results.includes(true)){
+        resObj ={
+          msg:"account created",
+          sucess:true,
+          uuid: results[0].uuid,
+          name:results[0].name,
+          id:results[0].id
+        }
+        
+      }else{
+        //if false send a false
+        resObj ={
+          msg:"account name already exists try agian",
+          acctCreated:false
+        }
+      }
+      res.json(resObj)
+    }).catch((data)=>{
+      res.json({
+        msg:"system error",
+        sucess: false
+      })
+    })//db.user.findOne.then
+  })
+}
+acctManager.createNewUuid = (userInfo, callback)=>{
   //create a new uuid ad assigns it
   let newUuid = uuidv4();
   db.User.update({
@@ -27,7 +59,7 @@ const _createNewUuid = (userInfo, callback)=>{
   })
 }
 
-const _checkUuid = (userInfo, res, callback)=>{
+acctManager.checkUuid = (userInfo, res, callback)=>{
   //gets user info
   db.User.findOne({
     where:{
@@ -50,7 +82,7 @@ const _checkUuid = (userInfo, res, callback)=>{
     }
   })
 }
-const _comparePassword = (req, res, userDbInfo)=>{
+acctManager.comparePassword = (req, res, userDbInfo)=>{
   bcrypt.compare(req.body.password, userDbInfo.pw_hash, (err, matched)=>{
       //if matches update with new uuid
       let newUuid = uuidv4();
@@ -94,42 +126,4 @@ const _comparePassword = (req, res, userDbInfo)=>{
     })//compare
 }
 
-
-
-router.post("/login/create", (req, res)=>{
-  //hash the password
-  acctManager.createAcct(req.body, res)
-})
-
-router.post("/login", (req, res)=>{
-  //find user in db
-  db.User.findOne({
-    name:req.body.name
-  }).then(results =>{
-    //compare the given password to stored hash
-    acctManager.comparePassword(req, res, results.dataValues)
-  }).catch((data)=>{
-    res.json({
-      msg:"password does not match",
-      sucess: false
-    })
-  })
-})
-
-router.post("/login/check", (req, res)=>{
-  //body needs uuid and name
-  acctManager.checkUuid(req.body, res, (newUuid)=>{
-      let resObj = {
-        name:req.body.name,
-        id: req.body.id,
-        uuid:newUuid,
-        valid:true,
-        msg:"Vaild Session"
-      }
-      res.json(resObj)
-  } )
-})
-
-module.exports = router;
-
-
+module.exports = acctManager;
