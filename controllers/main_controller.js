@@ -12,7 +12,7 @@ router.get("/", (req, res)=>{
   res.sendFile(path.join(__dirname ,"/../public/test.html"))
 })
 
-let _createNewUuid = (userInfo, callback)=>{
+const _createNewUuid = (userInfo, callback)=>{
   //create a new uuid ad assigns it
   let newUuid = uuidv4();
   db.User.update({
@@ -77,7 +77,7 @@ const _comparePassword = (req, res, userDbInfo)=>{
           console.log(err)
           resObj={
             msg:"login failed",
-            login:false
+            sucess:false
           }
            res.json(resObj)
         })
@@ -130,7 +130,7 @@ router.post("/login/create", (req, res)=>{
     }).catch((data)=>{
       res.json({
         msg:"password does not match",
-        login: false
+        sucess: false
       })
     })//db.user.findOne.then
   })
@@ -146,7 +146,7 @@ router.post("/login", (req, res)=>{
   }).catch((data)=>{
     res.json({
       msg:"password does not match",
-      login: false
+      sucess: false
     })
   })
 })
