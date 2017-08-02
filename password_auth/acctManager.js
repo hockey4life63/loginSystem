@@ -81,7 +81,6 @@ acctManager.checkUuid = (userInfo, res, callback)=>{
     }
   }).then(results=>{
     let decodedToken = jwt.verify(userInfo.token, secret.secret);
-    console.log(decodedToken)
     //records time since last update
     let timeSinceUpdate = moment().diff(moment(userInfo.updatedAt), "seconds")
     if(results.uuid === decodedToken.uuid && timeSinceUpdate <=6*60*60){
