@@ -3,10 +3,16 @@ const bcrypt = require('bcrypt');
 const uuidv4 = require('uuid/v4');
 const path = require("path");
 const moment = require('moment');
+const jwt = require("jsonwebtoken");
+const secret = require("../config/secret");
 
-const  acctManager = {}
+// var token = jwt.sign(user, app.get('superSecret'), {
+//           expiresInMinutes: 1440 // expires in 24 hours
+//         })
 
-acctManager.createAcct = (userInfo, res)=>{
+const  acctManager = {};
+
+acctManager.createAcct = (userInfo, callback)=>{
   bcrypt.hash(userInfo.password, 10, function(err, hash) {
     //check for usernmae and create it if doesnt exist
     db.User.findOrCreate({
@@ -21,9 +27,17 @@ acctManager.createAcct = (userInfo, res)=>{
       //if created a new one send response
       let resObj;
       if(results.includes(true)){
+        //create new token 
+        let token = jwt.sign({
+          name:results[0].name,
+          id:results[0].id,
+          uuid: results[0].uuid,
+        }, secret.secret);
+        //if created a new one send response
         resObj ={
           msg:"account created",
-          sucess:true,
+          success:true,
+          token,
           uuid: results[0].uuid,
           name:results[0].name,
           id:results[0].id
@@ -33,14 +47,14 @@ acctManager.createAcct = (userInfo, res)=>{
         //if false send a false
         resObj ={
           msg:"account name already exists try agian",
-          acctCreated:false
+          success:false
         }
       }
-      res.json(resObj)
+      callback(resObj)
     }).catch((data)=>{
-      res.json({
+      callback({
         msg:"system error",
-        sucess: false
+        success: false
       })
     })//db.user.findOne.then
   })
@@ -63,17 +77,29 @@ acctManager.checkUuid = (userInfo, res, callback)=>{
   //gets user info
   db.User.findOne({
     where:{
-      name:userInfo.name
+      id:userInfo.id
     }
   }).then(results=>{
+    let decodedToken = jwt.verify(userInfo.token, secret.secret);
+    console.log(decodedToken)
     //records time since last update
     let timeSinceUpdate = moment().diff(moment(userInfo.updatedAt), "seconds")
-    if(results.uuid === userInfo.uuid && timeSinceUpdate <=6*60*60){
+    if(results.uuid === decodedToken.uuid && timeSinceUpdate <=6*60*60){
       //if within last 6 hours callback with same uuid
-      callback(results.uuid)
-    } else if(results.uuid === userInfo.uuid && timeSinceUpdate<= 24*60*60){
+      let token = jwt.sign({
+          id:userInfo.id,
+          uuid:results.uuid,
+          name:userInfo.name
+        }, secret.secret);
+      callback(token)
+    } else if(results.uuid === decodedToken.uuid && timeSinceUpdate<= 24*60*60){
       //if over 6 hours but within 24hours generate new key to use and callback with it
-      _createNewUuid(results, (newUuid)=> {
+      acctManager.createNewUuid(results, (newUuid)=> {
+        let token = jwt.sign({
+          id:userInfo.id,
+          uuid:newUuid,
+          name:userInfo.name
+        }, secret.secret);
         callback(newUuid)
       })
     }else{
@@ -96,12 +122,17 @@ acctManager.comparePassword = (req, res, userDbInfo)=>{
             id:userDbInfo.id
           }
         }).then((data)=>{
-          
+          let token = jwt.sign({
+          id:userDbInfo.id,
+          uuid:newUuid,
+          name:userDbInfo.name
+        }, secret.secret);
           //return new uuid to browser 
           resObj={
-            msg:"login sucessfull",
-            sucess:true,
+            msg:"login successfull",
+            success:true,
             id:userDbInfo.id,
+            token,
             uuid:newUuid,
             name:userDbInfo.name,
           }
@@ -110,7 +141,7 @@ acctManager.comparePassword = (req, res, userDbInfo)=>{
           console.log(err)
           resObj={
             msg:"login failed",
-            sucess:false
+            success:false
           }
            res.json(resObj)
         })
@@ -118,7 +149,7 @@ acctManager.comparePassword = (req, res, userDbInfo)=>{
         //if failed send response
         resObj={
             msg:"login failed",
-            sucess:false,
+            success:false,
           }
            res.json(resObj)
       }//else
