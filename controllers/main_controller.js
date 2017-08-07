@@ -12,29 +12,29 @@ router.post("/login/create", (req, res) => acctManager.createAcct(req.body, resu
 
 //find user in db, then compare the given password to stored hash
 router.post("/login", (req, res) => {
-    db.User.findOne({
-        name: req.body.name
-    }).then(results => {
-        acctManager.comparePassword(req, res, results.dataValues)
-    }).catch(data => {
-        res.json({
-            msg: "password does not match",
-            success: false
-        })
-    })
+ 
+        acctManager.comparePassword(req,results=>res.json(results))
 })
 
 router.post("/login/check", (req, res) => {
     //body needs uuid and name
-    acctManager.checkUuid(req.body, res, token => {
-        const resObj = {
+    acctManager.checkUuid(req.body, response => {
+        if(response.success){
+            const resObj = {
             name: req.body.name,
             id: req.body.id,
-            token: token,
+            token: response.token,
             success: true,
             msg: "Valid Session"
+            }
+            res.json(resObj)
+        } else{
+            res.json({
+                msg:"invalid token",
+                success:false
+            })
         }
-        res.json(resObj)
+        
     })
 })
 
