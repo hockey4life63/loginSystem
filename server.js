@@ -4,6 +4,7 @@ const methodOverride = require("method-override");
 const exphbs = require("express-handlebars");
 const mysql = require("mysql");
 const router = require("./controllers/main_controller")
+const acctRouter = require("./controllers/acct_routes")
 const db = require("./models");
 const bcrypt = require("bcrypt");
 const moment = require('moment');
@@ -27,6 +28,7 @@ app.set("view engine", "handlebars");
 
 
 app.use("/", router)
+app.use("/acct", acctRouter)
 
 db.sequelize.sync({force:true}).then(function() {
   app.listen(port, function() {

@@ -33,22 +33,36 @@
 
   <button type="btn" id="subBtnLogin">login></button>
   </form>
+
+  <form>
+    <label>userName</label>
+    <input type="name" name="" id="forgot-username">
+    <button id="forgot-password">Forgot password</button>
+  </form>
+  <h1><a href="" id="forgotLink"></a></h1>
 </body>
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
   <script type="text/javascript">
 
+  $("#forgot-password").on("click", (e)=>{
+    e.preventDefault();
+    $.post("/acct/forgot", {
+      username:$("#forgot-username").val().trim()
+    }, (results)=>{
+      $("#forgotLink").attr("href", results.address)
+      $("#forgotLink").text(results.address);
+    })
+  })
+
     $("#subBtn").on("click", function(e){
       e.preventDefault();
       let user_info = {};
       user_info.name=$("#name").val();
       user_info.password = $("#password").val();
-      $.post("/login/create",user_info, (data)=>{
+      $.post("acct/signup",user_info, (data)=>{
         console.log(data);
-        $.post("/login/check",data, (results)=>{
-          console.log(results);
-        });
       });
     });
 
@@ -57,11 +71,8 @@
       let user_info = {};
       user_info.name=$("#nameLogin").val();
       user_info.password = $("#passwordLogin").val();
-      $.post("/login",user_info, (data)=>{
+      $.post("acct/signin",user_info, (data)=>{
         console.log(data)
-        $.post("/login/check",data, (results)=>{
-          console.log(results);
-        });
       });
     })
   </script>

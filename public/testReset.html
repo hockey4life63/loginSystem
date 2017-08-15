@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>password Reset</title>
+</head>
+<body>
+    <form method="POST">
+        <label>Password</label>
+        <input type="password" name="password" id="password">
+        <label>Password confirm</label>
+        <input type="password" name="password-confirm" id="password-confirm">
+        <button id="submit-btn" disabled>Submit</button>
+    </form>
+    <h1><a href="" id="newLink"></a></h1>
+    <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $("#password, #password-confirm").on("keyup", (e)=>{
+            if($("#password").val().trim() === $("#password-confirm").val().trim()){
+                $("#submit-btn").prop("disabled", false)
+
+            } else{
+                $("#submit-btn").prop("disabled", true)
+            }
+        });
+    </script>
+</body>
+</html>

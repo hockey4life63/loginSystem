@@ -14,6 +14,12 @@ module.exports = function(sequelize, DataTypes) {
     },
     uuid:{
       type:DataTypes.STRING,
+    },
+    password_reset_token:{
+      type:DataTypes.STRING
+    },
+    password_reset_exp:{
+      type:DataTypes.DATE
     }
   });
   return User;
