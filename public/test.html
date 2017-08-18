@@ -51,6 +51,7 @@
     $.post("/acct/forgot", {
       username:$("#forgot-username").val().trim()
     }, (results)=>{
+      console.log(results)
       $("#forgotLink").attr("href", results.address)
       $("#forgotLink").text(results.address);
     })

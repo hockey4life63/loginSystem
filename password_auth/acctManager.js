@@ -11,28 +11,79 @@ const secret = require("../config/secret");
 
 const acctManager = {};
 
-const _checkUsernameAndPassword = (name, password) => {
-    let userErrors = [];
-    let passwordErrors = [];
-    if (name.length < 4 || name.length > 20) {
-        errs.push("Usernmae must be between 4 and 20 characters")
-    }
-    if (!name.match(/^[a-zA-Z0-9_-]{4,20}$/g))
-        if (!name[0].match(/[a-zA-Z]/g)) {
-            uerrErrors.push("Username must start with a letter")
+
+acctManager.createForgotPasswordLink = (username,req , callback)=>{
+    let resetToken = uuidv4();
+    db.User.findOne({
+        where:{
+            name:username
         }
-    if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z@#$%]{6,30}$/g)) {
-        passwordErrors.push("password must contain at lease one uppercase and lowercase letter and 1 number and only these @#$% symbols and be between 8-30 characters long")
-    }
-    return {
-        userErrors,
-        passwordErrors,
-        success: (userErrors.length === 0 && passwordErrors.length === 0)
-    }
+    }).then(userInfo=>{
+        //generate unique token
+        //set to userdb
+        db.User.update({
+            password_reset_token:resetToken,
+            password_reset_exp: moment().format()
+        },{
+            where:{
+                id:userInfo.id
+            }
+        }).then(results=>{
+            //send email(or for now just send a new address)with link to reset age with token
+           callback('http://' + req.headers.host + '/acct/reset/' + resetToken)
+                
+            
+        })
+        
+    })
+}
+
+
+acctManager.checkResetToken = (token, password,  callback)=>{
+    db.User.findOne({
+        where:{
+            password_reset_token:token
+        }
+    }).then(userInfo=>{
+        if(!userInfo){
+            callback({
+                success:false,
+                msg:"Invalid Token"
+            })
+        }else if (moment().diff(moment(userInfo.password_reset_exp), "seconds")>3600) {
+            callback({
+                success:false,
+                msg:"Expired Token"
+            })
+        }else{ 
+            acctManager.changePassword(password, userInfo.id,  (results)=>{
+                callback({
+                    results,
+                    success:true
+                })
+            })
+        }
+        
+    })
+}
+
+acctManager.changePassword = (password, id,  callback)=>{
+    bcrypt.hash(password, 10, function(err, hash) {
+            db.User.update({
+                password_reset_token:"",
+                password_reset_exp: "",
+                pw_hash:hash
+            },{
+                where:{
+                    id
+                }
+            }).then(results=>{
+               callback(results)
+            })
+         })
 }
 
 acctManager.createAcct = (userInfo, callback) => {
-    console.log(userInfo)
     let errors = _checkUsernameAndPassword(userInfo.name, userInfo.password)
     if (errors.success) {
         bcrypt.hash(userInfo.password, 10, function(err, hash) {
@@ -47,7 +98,6 @@ acctManager.createAcct = (userInfo, callback) => {
                 }
             }).then(results => {
                 //if created a new one send response
-                console.log(results)
                 let resObj;
                 if (results.includes(true)) {
                     //create new token 
@@ -164,7 +214,6 @@ acctManager.checkUuid = (userInfo, callback) => {
     })
 }
 acctManager.comparePassword = (req, callback) => {
-    console.log(req.body.name)
     db.User.findOne({
         where: {
             name: req.body.name
@@ -205,7 +254,6 @@ acctManager.comparePassword = (req, callback) => {
                     }
                     callback(resObj)
                 }).catch(err => {
-                    console.log(err)
                     resObj = {
                         msg: "login failed",
                         success: false
@@ -223,7 +271,6 @@ acctManager.comparePassword = (req, callback) => {
 
         }) //compare
     }).catch(data => {
-        console.log(data)
         callback({
             msg: "password does not match",
             success: false
@@ -231,5 +278,24 @@ acctManager.comparePassword = (req, callback) => {
     })
 }
 
+const _checkUsernameAndPassword = (name, password) => {
+    let userErrors = [];
+    let passwordErrors = [];
+    if (name.length < 4 || name.length > 20) {
+        errs.push("Usernmae must be between 4 and 20 characters")
+    }
+    if (!name.match(/^[a-zA-Z0-9_-]{4,20}$/g))
+        if (!name[0].match(/[a-zA-Z]/g)) {
+            uerrErrors.push("Username must start with a letter")
+        }
+    if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z@#$%]{6,30}$/g)) {
+        passwordErrors.push("password must contain at lease one uppercase and lowercase letter and 1 number and only these @#$% symbols and be between 8-30 characters long")
+    }
+    return {
+        userErrors,
+        passwordErrors,
+        success: (userErrors.length === 0 && passwordErrors.length === 0)
+    }
+}
 
 module.exports = acctManager;

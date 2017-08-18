@@ -19,7 +19,7 @@ module.exports = function(sequelize, DataTypes) {
       type:DataTypes.STRING
     },
     password_reset_exp:{
-      type:DataTypes.DATE
+      type:DataTypes.STRING
     }
   });
   return User;

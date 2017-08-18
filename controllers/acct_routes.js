@@ -38,28 +38,10 @@ router.post("/check", (req, res) => {
 })
 
 router.post("/forgot", (req, res)=>{
-    let resetToken = uuidv4();
-    db.User.findOne({
-        where:{
-            name:req.body.username
-        }
-    }).then(userInfo=>{
-        //generate unique token
-        //set to userdb
-        db.User.update({
-            password_reset_token:resetToken,
-            password_reset_exp: moment().add(1,"h")
-        },{
-            where:{
-                id:userInfo.id
-            }
-        }).then(results=>{
-            //send email(or for now just send a new address)with link to reset age with token
-            res.json({
-                address:'http://' + req.headers.host + '/acct/reset/' + resetToken
-            })
+    acctManager.createForgotPasswordLink(req.body.username, req, (results)=>{
+        res.json({
+            address:results
         })
-        
     })
 })
 
@@ -69,24 +51,11 @@ router.get("/reset/:token", (req, res)=>{
 
 router.post("/reset/:token", (req, res)=>{
     //look up token
-    db.User.findOne({
-        where:{
-            password_reset_token:req.params.token
+    acctManager.checkResetToken(req.params.token, req.body.password, (results)=>{
+        if(results.success){
+            res.redirect("/")
         }
-    }).then(userInfo=>{
-         bcrypt.hash(req.body.password, 10, function(err, hash) {
-            db.User.update({
-                password_reset_token:"",
-                password_rest_exp: "",
-                pw_hash:hash
-            },{
-                where:{
-                    id:userInfo.id
-                }
-            }).then(results=>{
-                res.redirect("/")
-            })
-         })
+        
     })
     
     //set password to new one
